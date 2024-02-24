@@ -1,0 +1,122 @@
+diploiTemplateVersion: V1.0
+name: diploi-react-trpc
+description: A starter template for Vite React + tRPC
+defaultName: React tRPC
+
+stages:
+  - name: Development
+    identifier: development
+  - name: Staging
+    identifier: staging
+  - name: Production
+    identifier: production
+
+contexts:
+  - name: app
+    identifier: app
+  - name: postgres
+    identifier: postgres
+
+parameterGroups:
+  - name: PostgreSQL Database
+    identifier: postgres
+    toggleable: true
+    description: Database connection info
+    defaultValue: TRUE
+    parameters:
+      - name: Host
+        identifier: POSTGRES_HOST
+        defaultValue: postgres
+        type: string
+      - name: Port
+        identifier: POSTGRES_PORT
+        defaultValue: 5432
+        type: integer
+      - name: User
+        identifier: POSTGRES_USER
+        defaultValue: postgres
+        type: string
+        contexts: label=postgres,label=app
+      - name: Password
+        identifier: POSTGRES_PASSWORD
+        defaultValue: postgres
+        type: secret
+      - name: Schema
+        identifier: POSTGRES_DB
+        defaultValue: todo
+        type: string
+
+environmentVariables:
+  - identifier: SUBTITLE
+    defaultValue: This text comes from an environment variable
+    type: string
+    contexts: label=app
+
+repositories:
+  - name: app
+    identifier: app
+
+hosts:
+  - name: App
+    identifier: app
+    urlFormat: '[label].[default-domain]'
+
+ssh:
+  - usernameFormat: '[label]'
+    contexts: label=app
+    stages:
+      - development
+  - usernameFormat: '[label]-[index]'
+    contexts: label=app
+    stages:
+      - production
+  - usernameFormat: '[label]'
+    contexts: label=app
+    stages:
+      - staging
+logs:
+  - identifier: vite-log
+    name: Vite Log
+    labelSelector: app=app
+    command: tail -n 2000 -F /var/log/vite.log
+  - identifier: node-log
+    name: Node Log
+    labelSelector: app=app
+    command: tail -n 2000 -F /var/log/node.log
+
+actions:
+  - identifier: vite-restart
+    name: Restart Vite
+    labelSelector: app=app
+    command: supervisord restart vite
+  - identifier: node-restart
+    name: Restart Node
+    labelSelector: app=app
+    command: supervisord restart node
+
+images:
+  - identifier: app
+    repository: app
+    dockerfile: Dockerfile
+    image: ghcr.io/munkkeli/diploi-react-trpc-template
+    stages:
+      - development
+      - production
+      - staging
+    manualBuildStages:
+      - development
+
+storage:
+  - identifier: app
+    stages:
+      - development
+    sizeMiB: 6144
+  - identifier: postgres
+    stages:
+      - production
+      - staging
+      - development
+    sizeMiB: 4096
+
+status:
+  url: http://app:3000/status

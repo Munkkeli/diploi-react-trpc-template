@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  ports:
+    - port: 3000
+      name: vite
+    - port: 3001
+      name: node
+    - port: 3002
+      name: status
+  selector:
+    app: app
